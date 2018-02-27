@@ -130,7 +130,7 @@ class Trainer():
 
         # Train generators for one batch
         # Weaken the generator by training only every other iteration
-        if iter % 2 == 0: # Switch this to 1 after ~10k iterations
+        if iter >= 10000 or iter % 2 == 0: # Switch this to 1 after ~10k iterations
             errGA = self.netGA_train([warped_A, target_A])
             errGB = self.netGB_train([warped_B, target_B])
             self.prev_errGA_sum = errGA[0]
