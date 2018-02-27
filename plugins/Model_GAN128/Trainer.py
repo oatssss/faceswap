@@ -40,6 +40,8 @@ class Trainer():
 
         self.lrD = 1e-4 # Discriminator learning rate
         self.lrG = 1e-4 # Generator learning rate
+        self.prev_errGA_sum = 0
+        self.prev_errGB_sum = 0
 
         generator = GANTrainingDataGenerator(self.random_transform_args, 220, 6, 2)
         self.train_batchA = generator.minibatchAB(fn_A, batch_size)
@@ -127,14 +129,18 @@ class Trainer():
         errDB  = self.netDB_train([warped_B, target_B])
 
         # Train generators for one batch
-        errGA = self.netGA_train([warped_A, target_A])
-        errGB = self.netGB_train([warped_B, target_B])
+        # Weaken the generator by training only every other iteration
+        if iter % 2 == 0: # Switch this to 1 after ~10k iterations
+            errGA = self.netGA_train([warped_A, target_A])
+            errGB = self.netGB_train([warped_B, target_B])
+            self.prev_errGA_sum = errGA[0]
+            self.prev_errGB_sum = errGB[0]
 
         # For calculating average losses
         self.errDA_sum += errDA[0]
         self.errDB_sum += errDB[0]
-        self.errGA_sum += errGA[0]
-        self.errGB_sum += errGB[0]
+        self.errGA_sum += self.prev_errGA_sum
+        self.errGB_sum += self.prev_errGA_sum
         self.avg_counter += 1
 
         print('[%s] [%d/%s][%d] Loss_DA: %f Loss_DB: %f Loss_GA: %f Loss_GB: %f'
