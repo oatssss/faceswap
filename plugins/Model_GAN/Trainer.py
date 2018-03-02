@@ -40,6 +40,8 @@ class Trainer():
 
         self.lrD = 1e-4 # Discriminator learning rate
         self.lrG = 1e-4 # Generator learning rate
+        self.prev_errDA_sum = 0
+        self.prev_errDB_sum = 0
         self.prev_errGA_sum = 0
         self.prev_errGB_sum = 0
 
@@ -125,20 +127,24 @@ class Trainer():
         epoch, warped_B, target_B = next(self.train_batchB)
 
         # Train dicriminators for one batch
-        errDA  = self.netDA_train([warped_A, target_A])
-        errDB  = self.netDB_train([warped_B, target_B])
+        # Weaken the discriminator by training 3/4 iteration
+        if iter % 4 != 0:
+            errDA  = self.netDA_train([warped_A, target_A])
+            errDB  = self.netDB_train([warped_B, target_B])
+            self.prev_errDA_sum = errDA[0]
+            self.prev_errDB_sum = errDB[0]
 
         # Train generators for one batch
-        # Weaken the generator by training only every other iterations
-        if iter >= 10000 or iter % 2 == 0: # Switch this to 1 after ~10k iterations
-            errGA = self.netGA_train([warped_A, target_A])
-            errGB = self.netGB_train([warped_B, target_B])
-            self.prev_errGA_sum = errGA[0]
-            self.prev_errGB_sum = errGB[0]
+        # Weaken the generator by training 3/4 iterations
+        # if iter % 4 != 0:
+        errGA = self.netGA_train([warped_A, target_A])
+        errGB = self.netGB_train([warped_B, target_B])
+        self.prev_errGA_sum = errGA[0]
+        self.prev_errGB_sum = errGB[0]
 
         # For calculating average losses
-        self.errDA_sum += errDA[0]
-        self.errDB_sum += errDB[0]
+        self.errDA_sum += self.prev_errDA_sum
+        self.errDB_sum += self.prev_errDB_sum
         self.errGA_sum += self.prev_errGA_sum
         self.errGB_sum += self.prev_errGA_sum
         self.avg_counter += 1
