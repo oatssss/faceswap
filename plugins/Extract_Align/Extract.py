@@ -4,9 +4,9 @@ import cv2
 
 from lib.aligner import get_align_mat
 
-class Extract:
-    def extract(self, image, face, size):
-        alignment = get_align_mat( face, size )
+class Extract(object):
+    def extract(self, image, face, size, align_eyes):
+        alignment = get_align_mat( face, size, align_eyes )
         return self.transform( image, alignment, size, 48 )
 
     def transform( self, image, mat, size, padding=0 ):
